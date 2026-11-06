@@ -1,0 +1,53 @@
+$kind: http-request
+name: 'TC-COLVAL-015: item_id that does not exist returns an error'
+description: |-
+  Type: Negative
+  Priority: Medium
+
+  Preconditions:
+  None
+
+  Cleanup:
+  None
+method: POST
+url: '{{BASE_URL}}'
+order: 8000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $values: JSON!) { change_multiple_column_values(board_id: $board, item_id: $item, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "1",
+        "values": "{\"text\":\"Hello\"}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should contain an errors array', function () {
+        pm.expect(jsonData.errors).to.be.an('array').that.is.not.empty;
+    });
+    pm.test('Error message should be the expected one', function () {
+        pm.expect(jsonData.errors[0].message).to.include("Item not found");
+    });
+    pm.test('Error code should be InvalidItemIdException', function () {
+        pm.expect(jsonData.errors[0].extensions.code).to.eql("InvalidItemIdException");
+    });
+    pm.test('Response should not contain item data', function () {
+        pm.expect(jsonData.data && jsonData.data.change_multiple_column_values).to.not.be.ok;
+    });
+  language: text/javascript

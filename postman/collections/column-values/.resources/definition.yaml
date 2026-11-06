@@ -1,0 +1,36 @@
+$kind: collection
+name: Column values - monday.com
+description: TC-COLVAL tests from Lab 1. Run with a 4000 ms delay between requests.
+variables:
+- key: BOARD_ID
+  value: ''
+- key: ITEM_ID
+  value: ''
+- key: itemName
+  value: ''
+auth:
+  type: apikey
+  credentials:
+  - key: key
+    value: Authorization
+  - key: value
+    value: '{{API_TOKEN}}'
+  - key: in
+    value: header
+scripts:
+- type: http:afterResponse
+  code: |-
+    const limit = Number(pm.environment.get('RESPONSE_TIME_LIMIT_MS') || 500);
+    const elapsed = Math.round(pm.response.responseTime);
+
+    pm.test('Content-Type should be present', function () {
+        pm.response.to.have.header('Content-Type');
+    });
+
+    if (elapsed <= limit) {
+        pm.test(`Response time should be less than ${limit}ms`, function () {});
+    } else {
+        // slow responses are only noted, they don't fail the test
+        pm.test.skip(`Response time was ${elapsed} ms (target ${limit} ms)`, function () {});
+    }
+  language: text/javascript

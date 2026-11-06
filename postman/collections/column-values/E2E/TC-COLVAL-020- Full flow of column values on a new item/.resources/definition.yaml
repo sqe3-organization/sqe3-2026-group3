@@ -1,0 +1,12 @@
+$kind: collection
+name: 'TC-COLVAL-020: Full flow of column values on a new item'
+order: 1000
+description: |-
+  Type: E2E
+  Priority: High
+
+  Preconditions:
+  None
+
+  Cleanup:
+  The item is deleted in step 6

@@ -1,0 +1,12 @@
+$kind: http-request
+method: GET
+url: '{{FAKE_BASE_URL}}/products/1'
+order: 2000
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 200', () => pm.response.to.have.status(200));
+    const body = pm.response.json();
+    pm.test('Returned id is 1', () => pm.expect(body.id).to.eql(1));
+    pm.test('Price is a positive number', () => pm.expect(body.price).to.be.a('number').and.above(0));
+  language: text/javascript

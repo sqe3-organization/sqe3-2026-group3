@@ -1,0 +1,4 @@
+$kind: collection
+name: Board setup
+order: 1000
+description: Creates the board for the tests.

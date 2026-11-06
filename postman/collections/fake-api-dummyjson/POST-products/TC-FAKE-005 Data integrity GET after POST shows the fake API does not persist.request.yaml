@@ -1,0 +1,10 @@
+$kind: http-request
+method: GET
+url: '{{FAKE_BASE_URL}}/products/{{NEW_PRODUCT_ID}}'
+order: 2000
+scripts:
+- type: afterResponse
+  code: |-
+    // dummyjson does not really save it
+    pm.test('Status code is 404', () => pm.response.to.have.status(404));
+  language: text/javascript

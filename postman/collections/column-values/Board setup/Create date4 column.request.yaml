@@ -1,0 +1,35 @@
+$kind: http-request
+method: POST
+url: '{{BASE_URL}}'
+order: 4000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!) { create_column(board_id: $board, id: \"date4\", title: \"Date\", column_type: date) { id type } }",
+      "variables": {
+        "board": "{{BOARD_ID}}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Column id should be date4', function () {
+        pm.expect(jsonData.data.create_column.id).to.eql('date4');
+    });
+  language: text/javascript

@@ -1,0 +1,4 @@
+$kind: collection
+name: Board cleanup
+order: 6000
+description: Deletes the board.

@@ -1,0 +1,39 @@
+$kind: http-request
+name: 'TC-COLVAL-020 Step 7: Check item state'
+method: POST
+url: '{{BASE_URL}}'
+order: 7000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id state } }",
+      "variables": {
+        "ids": [
+          "{{ITEM_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Item should not be active', function () {
+        const items = jsonData.data.items;
+        if (items.length) pm.expect(items[0].state).to.eql('deleted');
+    });
+  language: text/javascript

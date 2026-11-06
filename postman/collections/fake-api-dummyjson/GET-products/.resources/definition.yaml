@@ -1,0 +1,3 @@
+$kind: collection
+name: GET / products
+order: 1000
