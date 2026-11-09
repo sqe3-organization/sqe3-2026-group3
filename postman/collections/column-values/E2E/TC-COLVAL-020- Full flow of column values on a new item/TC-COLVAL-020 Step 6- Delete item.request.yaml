@@ -1,0 +1,36 @@
+$kind: http-request
+name: 'TC-COLVAL-020 Step 6: Delete item'
+method: POST
+url: '{{BASE_URL}}'
+order: 6000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($item: ID!) { delete_item(item_id: $item) { id } }",
+      "variables": {
+        "item": "{{ITEM_ID}}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the deleted id', function () {
+        pm.expect(jsonData.data.delete_item.id).to.eql(pm.collectionVariables.get('ITEM_ID'));
+    });
+  language: text/javascript

@@ -1,0 +1,18 @@
+$kind: http-request
+method: GET
+url: '{{FAKE_BASE_URL}}/products?limit=5&select=title,price'
+order: 1000
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 200', () => pm.response.to.have.status(200));
+    const body = pm.response.json();
+    pm.test('Body has 5 products and pagination fields', () => {
+        pm.expect(body.products).to.be.an('array').with.lengthOf(5);
+        pm.expect(body.limit).to.eql(5);
+        pm.expect(body.total).to.be.above(0);
+    });
+    pm.test('Every product has id, title and price', () => {
+        body.products.forEach(p => pm.expect(p).to.include.keys('id', 'title', 'price'));
+    });
+  language: text/javascript

@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'TC-COLVAL-020 Step 2: Update three columns'
+method: POST
+url: '{{BASE_URL}}'
+order: 2000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $values: JSON!) { change_multiple_column_values(board_id: $board, item_id: $item, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "{{ITEM_ID}}",
+        "values": "{\"status\":{\"label\":\"Done\"},\"date4\":{\"date\":\"2026-11-15\"},\"text\":\"E2E text\"}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the item id', function () {
+        pm.expect(jsonData.data.change_multiple_column_values.id).to.eql(pm.collectionVariables.get('ITEM_ID'));
+    });
+  language: text/javascript

@@ -1,0 +1,41 @@
+$kind: http-request
+name: 'TC-COLVAL-020 Step 8: Update the deleted item'
+method: POST
+url: '{{BASE_URL}}'
+order: 8000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $values: JSON!) { change_multiple_column_values(board_id: $board, item_id: $item, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "{{ITEM_ID}}",
+        "values": "{\"status\":{\"label\":\"Done\"},\"date4\":{\"date\":\"2026-11-15\"},\"text\":\"E2E text\"}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should contain an errors array', function () {
+        pm.expect(jsonData.errors).to.be.an('array').that.is.not.empty;
+    });
+    pm.test('Error message should be the expected one', function () {
+        pm.expect(jsonData.errors[0].message).to.include("inactive items");
+    });
+    pm.test('Response should not contain item data', function () {
+        pm.expect(jsonData.data && jsonData.data.change_multiple_column_values).to.not.be.ok;
+    });
+  language: text/javascript

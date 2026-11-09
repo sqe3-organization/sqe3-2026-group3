@@ -1,0 +1,36 @@
+$kind: http-request
+method: POST
+url: '{{BASE_URL}}'
+order: 3000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $defaults: JSON) { create_column(board_id: $board, id: \"status\", title: \"Status\", column_type: status, defaults: $defaults) { id type } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "defaults": "{\"labels\":{\"0\":\"Working on it\",\"1\":\"Done\",\"2\":\"Stuck\"}}"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Column id should be status', function () {
+        pm.expect(jsonData.data.create_column.id).to.eql('status');
+    });
+  language: text/javascript

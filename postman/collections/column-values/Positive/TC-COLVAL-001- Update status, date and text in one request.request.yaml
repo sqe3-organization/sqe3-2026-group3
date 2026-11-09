@@ -1,0 +1,97 @@
+$kind: http-request
+name: 'TC-COLVAL-001: Update status, date and text in one request'
+description: |-
+  Type: Positive
+  Priority: High
+
+  Preconditions:
+  Create an item by API
+
+  Cleanup:
+  Delete the item by API
+method: POST
+url: '{{BASE_URL}}'
+order: 1000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $values: JSON!) { change_multiple_column_values(board_id: $board, item_id: $item, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "{{ITEM_ID}}",
+        "values": "{\"status\":{\"label\":\"Done\"},\"date4\":{\"date\":\"2026-11-15\"},\"text\":\"Payment checked\"}"
+      }
+    }
+scripts:
+- type: beforeRequest
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // precondition: create the item by API
+    pm.collectionVariables.set('itemName', `AT - ${pm.variables.replaceIn('{{$randomProductName}}')}`);
+    try {
+        const created = await sendQuery("mutation ($board: ID!, $name: String!, $values: JSON) { create_item(board_id: $board, item_name: $name, column_values: $values) { id name } }", {
+            board: pm.collectionVariables.get('BOARD_ID'),
+            name: pm.collectionVariables.get('itemName'),
+            values: "{\"status\":{\"label\":\"Working on it\"},\"date4\":{\"date\":\"2026-11-01\"},\"text\":\"Initial text\"}"
+        });
+        pm.collectionVariables.set('ITEM_ID', created.data.create_item.id);
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the item id', function () {
+        pm.expect(jsonData.data.change_multiple_column_values.id).to.eql(pm.collectionVariables.get('ITEM_ID'));
+    });
+
+    // cleanup: delete the item by API
+    try {
+        await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: pm.collectionVariables.get('ITEM_ID') });
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript

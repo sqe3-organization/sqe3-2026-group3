@@ -1,0 +1,27 @@
+name: Fake API
+values:
+- key: FAKE_BASE_URL
+  value: https://dummyjson.com
+  enabled: true
+  type: default
+  description: Base URL
+- key: FAKE_USER
+  value: emilys
+  enabled: true
+  type: default
+  description: Demo user
+- key: FAKE_PASSWORD
+  value: emilyspass
+  enabled: true
+  type: default
+  description: Demo password
+- key: PRODUCT_TITLE
+  value: AT - Lab 2 test product
+  enabled: true
+  type: default
+  description: Product title
+- key: RESPONSE_TIME_LIMIT_MS
+  value: '500'
+  enabled: true
+  type: default
+  description: Response time target

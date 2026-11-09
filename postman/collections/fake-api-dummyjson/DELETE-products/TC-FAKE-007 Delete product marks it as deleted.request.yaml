@@ -1,0 +1,12 @@
+$kind: http-request
+method: DELETE
+url: '{{FAKE_BASE_URL}}/products/1'
+order: 1000
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 200', () => pm.response.to.have.status(200));
+    const body = pm.response.json();
+    pm.test('isDeleted is true', () => pm.expect(body.isDeleted).to.eql(true));
+    pm.test('deletedOn is a valid date', () => pm.expect(Date.parse(body.deletedOn)).to.not.be.NaN);
+  language: text/javascript

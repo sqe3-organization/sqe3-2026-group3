@@ -1,0 +1,36 @@
+$kind: http-request
+method: POST
+url: '{{BASE_URL}}'
+order: 2000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($name: String!) { create_board(board_name: $name, board_kind: private, empty: true) { id } }",
+      "variables": {
+        "name": "AT - SQE3 Lab 2 Column values run"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the board id', function () {
+        pm.expect(jsonData.data.create_board.id).to.be.a('string').and.not.empty;
+    });
+    pm.collectionVariables.set('BOARD_ID', jsonData.data.create_board.id);
+  language: text/javascript

@@ -1,0 +1,15 @@
+$kind: http-request
+method: GET
+url: '{{FAKE_BASE_URL}}/auth/me'
+order: 2000
+auth:
+  type: bearer
+  credentials:
+  - key: token
+    value: invalid_token_123
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 401', () => pm.response.to.have.status(401));
+    pm.test('Message says the token is invalid', () => pm.expect(pm.response.json().message).to.match(/token/i));
+  language: text/javascript

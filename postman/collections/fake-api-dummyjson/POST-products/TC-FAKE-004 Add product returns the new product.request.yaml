@@ -1,0 +1,23 @@
+$kind: http-request
+method: POST
+url: '{{FAKE_BASE_URL}}/products/add'
+order: 1000
+headers:
+- key: Content-Type
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "{{PRODUCT_TITLE}}",
+      "price": 25
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 201', () => pm.response.to.have.status(201));
+    const body = pm.response.json();
+    pm.test('Title matches what was sent', () => pm.expect(body.title).to.eql(pm.environment.get('PRODUCT_TITLE')));
+    pm.test('A new id is generated', () => pm.expect(body.id).to.be.a('number'));
+    pm.environment.set('NEW_PRODUCT_ID', body.id);
+  language: text/javascript

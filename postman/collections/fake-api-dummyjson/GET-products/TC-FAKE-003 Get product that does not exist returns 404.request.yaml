@@ -1,0 +1,10 @@
+$kind: http-request
+method: GET
+url: '{{FAKE_BASE_URL}}/products/99999'
+order: 3000
+scripts:
+- type: afterResponse
+  code: |-
+    pm.test('Status code is 404', () => pm.response.to.have.status(404));
+    pm.test('Message names the missing id', () => pm.expect(pm.response.json().message).to.include('99999'));
+  language: text/javascript

@@ -1,0 +1,4 @@
+$kind: collection
+name: POST / products
+order: 2000
+description: POST and then a GET to check the data.
