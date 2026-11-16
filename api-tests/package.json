@@ -1,0 +1,28 @@
+{
+  "name": "sqe3-group3-api-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API tests for monday.com written in code (Group 3)",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "test": "mocha test/poc test/column-values/no-preconditions.test.js test/column-values/positive.test.js test/column-values/negative.test.js test/column-values/boundary.test.js test/column-values/e2e.test.js",
+    "test:poc": "mocha test/poc",
+    "test:no-pre": "mocha test/column-values/no-preconditions.test.js",
+    "test:monday": "mocha test/column-values/no-preconditions.test.js test/column-values/positive.test.js test/column-values/negative.test.js test/column-values/boundary.test.js test/column-values/e2e.test.js",
+    "report": "mocha --reporter mochawesome --reporter-options reportDir=reports,reportFilename=mocha-report,charts=true test/poc test/column-values/no-preconditions.test.js test/column-values/positive.test.js test/column-values/negative.test.js test/column-values/boundary.test.js test/column-values/e2e.test.js",
+    "postman:fake": "node scripts/run-postman.js fake",
+    "postman:monday": "node scripts/run-postman.js monday"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "axios": "^1.21.1",
+    "chai": "^6.3.0",
+    "mocha": "^12.0.3",
+    "mochawesome": "^8.1.1",
+    "newman": "^6.2.3",
+    "newman-reporter-htmlextra": "^1.23.1"
+  }
+}
