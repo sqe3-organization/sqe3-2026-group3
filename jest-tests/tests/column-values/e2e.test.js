@@ -16,10 +16,10 @@ describe('TC-COLVAL-020: Full flow of column values on a new item', () => {
 
   test('Step 1: Create item', async () => {
     const { res, id } = await itemsApi.create(ctx.boards.id, 'AT - COLVAL E2E');
+    ctx.items = { id }; // saved first, so a slow response does not break the next steps
     expectCommon(res);
     expect(res.data.errors).toBeUndefined();
     expect(id).toMatch(/^\d+$/);
-    ctx.items = { id };
   });
 
   test('Step 2: Update three columns', async () => {
