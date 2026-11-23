@@ -1,0 +1,32 @@
+{
+  "kind": "public",
+  "columns": [
+    {
+      "id": "status",
+      "title": "Status",
+      "type": "status",
+      "defaults": {
+        "labels": {
+          "0": "Working on it",
+          "1": "Done",
+          "2": "Stuck"
+        }
+      }
+    },
+    {
+      "id": "date4",
+      "title": "Date",
+      "type": "date"
+    },
+    {
+      "id": "text",
+      "title": "Text",
+      "type": "text"
+    }
+  ],
+  "initialItem": {
+    "status": "Working on it",
+    "date": "2026-11-01",
+    "text": "Initial text"
+  }
+}
