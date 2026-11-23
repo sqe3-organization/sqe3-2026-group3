@@ -1,0 +1,75 @@
+[
+  {
+    "id": "TC-COLVAL-009",
+    "title": "Malformed JSON in column_values returns an error",
+    "values": "{\"text\":\"Broken\"",
+    "error": {
+      "message": "invalid value"
+    }
+  },
+  {
+    "id": "TC-COLVAL-010",
+    "title": "Column id that does not exist returns an error",
+    "values": "{\"fake_column_123\":\"Hello\"}",
+    "error": {
+      "message": "column ID",
+      "code": "InvalidColumnIdException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-011",
+    "title": "Status label that does not exist returns an error",
+    "values": "{\"status\":{\"label\":\"Finished\"}}",
+    "error": {
+      "message": "label",
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-012",
+    "title": "Valid column together with a wrong column id saves nothing",
+    "values": "{\"text\":\"Should not save\",\"fake_column_123\":\"x\"}",
+    "error": {
+      "message": "column ID",
+      "code": "InvalidColumnIdException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-013",
+    "title": "Status index that does not exist returns an error",
+    "values": "{\"status\":{\"index\":99}}",
+    "error": {
+      "message": "label does not exist",
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-014",
+    "title": "Date in a wrong format returns an error",
+    "values": "{\"date4\":{\"date\":\"15/11/2026\"}}",
+    "error": {
+      "message": "invalid value",
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-015",
+    "title": "item_id that does not exist returns an error",
+    "values": "{\"text\":\"Hello\"}",
+    "item": "1",
+    "error": {
+      "message": "Item not found",
+      "code": "InvalidItemIdException"
+    }
+  },
+  {
+    "id": "TC-COLVAL-016",
+    "title": "board_id that does not exist returns an error",
+    "values": "{\"text\":\"Hello\"}",
+    "board": "1",
+    "error": {
+      "message": "board does not exist",
+      "code": "InvalidBoardIdException"
+    }
+  }
+]
