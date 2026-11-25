@@ -1,0 +1,83 @@
+$kind: http-request
+name: 'TC-ITEMS-007: Item name of 255 characters is saved'
+description: |-
+  Type: Boundary
+  Priority: Medium
+
+  Preconditions:
+  None
+
+  Cleanup:
+  Delete the created item by API
+method: POST
+url: '{{BASE_URL}}'
+order: 2000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "name": "{{longName}}"
+      }
+    }
+scripts:
+- type: beforeRequest
+  code: |-
+    // test data: name of 255 characters
+    pm.collectionVariables.set('longName', 'A'.repeat(255));
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+
+    // data integrity: read the item again
+    try {
+        const check = await sendQuery("query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }", { ids: [jsonData.data.create_item.id] });
+        const item = check.data.items[0];
+        pm.test("[Data integrity] - Stored name should have 255 characters", function () {
+            pm.expect(item.name.length).to.eql(255);
+        });
+    } catch (err) {
+        pm.test('[Data integrity] - Item should be readable', function () { throw err; });
+    }
+
+    // cleanup: delete the created item by API (only if the API created one)
+    const createdId = jsonData && jsonData.data && jsonData.data.create_item && jsonData.data.create_item.id;
+    if (createdId) {
+        try {
+            await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: createdId });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+  language: text/javascript

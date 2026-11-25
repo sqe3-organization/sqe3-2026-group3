@@ -1,0 +1,49 @@
+$kind: http-request
+name: 'TC-ITEMS-011: Create item with a board_id that does not exist returns an error'
+description: |-
+  Type: Negative
+  Priority: High
+
+  Preconditions:
+  Board 1 does not exist
+
+  Cleanup:
+  None
+method: POST
+url: '{{BASE_URL}}'
+order: 3000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }",
+      "variables": {
+        "board": "1",
+        "name": "Ghost item"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should contain an errors array', function () {
+        pm.expect(jsonData.errors).to.be.an('array').that.is.not.empty;
+    });
+    pm.test('Error code should be InvalidBoardIdException', function () {
+        pm.expect(jsonData.errors[0].extensions.code).to.eql("InvalidBoardIdException");
+    });
+    pm.test('Response should not contain item data', function () {
+        pm.expect(jsonData.data && jsonData.data.create_item).to.not.be.ok;
+    });
+  language: text/javascript

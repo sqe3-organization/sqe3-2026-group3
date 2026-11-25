@@ -1,0 +1,35 @@
+$kind: http-request
+method: POST
+url: "{{BASE_URL}}"
+auth:
+  type: inherit
+  credentials:
+    id: collection-9E3B77544DD24e61f5a6bbA9-apikey
+order: 1000
+headers:
+  Content-Type: application/json
+  API-Version: "{{API_VERSION}}"
+body:
+  type: json
+  content: |-
+    {
+      "query": "query { me { id name email } }",
+      "variables": {}
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      // status code
+      pm.test('Status code should be 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      // response body
+      const jsonData = pm.response.json();
+      pm.test('Response should not have errors', function () {
+          pm.expect(jsonData.errors).to.be.undefined;
+      });
+      pm.test('Response body should contain the user name', function () {
+          pm.expect(jsonData.data.me.name).to.be.a('string').and.not.empty;
+      });
+    language: text/javascript

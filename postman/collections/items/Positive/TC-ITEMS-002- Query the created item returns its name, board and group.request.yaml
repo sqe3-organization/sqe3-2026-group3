@@ -1,0 +1,111 @@
+$kind: http-request
+name: 'TC-ITEMS-002: Query the created item returns its name, board and group'
+description: |-
+  Type: Positive
+  Priority: High
+
+  Preconditions:
+  Create an item in GROUP_ID by API
+
+  Cleanup:
+  Delete the item by API
+method: POST
+url: '{{BASE_URL}}'
+order: 2000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }",
+      "variables": {
+        "ids": [
+          "{{ITEM_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: beforeRequest
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // precondition: create the item by API
+    pm.collectionVariables.set('itemName', `AT - ${pm.variables.replaceIn('{{$randomProductName}}')}`);
+    try {
+        const created = await sendQuery("mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }", {
+            board: pm.collectionVariables.get('BOARD_ID'),
+            name: pm.collectionVariables.get('itemName'),
+            group: pm.collectionVariables.get('GROUP_ID')
+        });
+        pm.collectionVariables.set('ITEM_ID', created.data.create_item.id);
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response should contain exactly one item', function () {
+        pm.expect(jsonData.data.items).to.have.lengthOf(1);
+    });
+    const item = jsonData.data.items[0];
+    pm.test('Item name should be the created one', function () {
+        pm.expect(item.name).to.eql(pm.collectionVariables.get('itemName'));
+    });
+    pm.test('Item should belong to the test board', function () {
+        pm.expect(item.board.id).to.eql(pm.collectionVariables.get('BOARD_ID'));
+    });
+    pm.test('Item should belong to the second group', function () {
+        pm.expect(item.group.id).to.eql(pm.collectionVariables.get('GROUP_ID'));
+        pm.expect(item.group.title).to.be.a('string').and.not.empty;
+    });
+    pm.test('Item state should be active', function () {
+        pm.expect(item.state).to.eql('active');
+    });
+
+    // cleanup: delete the item by API
+    try {
+        await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: pm.collectionVariables.get('ITEM_ID') });
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript

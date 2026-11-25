@@ -1,0 +1,12 @@
+$kind: collection
+name: 'TC-ITEMS-016: Full CRUD flow of an item'
+order: 1000
+description: |-
+  Type: E2E
+  Priority: High
+
+  Preconditions:
+  None
+
+  Cleanup:
+  The item is deleted in step 5

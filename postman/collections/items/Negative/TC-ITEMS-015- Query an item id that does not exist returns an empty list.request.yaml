@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'TC-ITEMS-015: Query an item id that does not exist returns an empty list'
+description: |-
+  Type: Negative
+  Priority: Low
+
+  Preconditions:
+  Item 1 does not exist
+
+  Cleanup:
+  None
+method: POST
+url: '{{BASE_URL}}'
+order: 7000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }",
+      "variables": {
+        "ids": [
+          "1"
+        ]
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Items should be an empty list', function () {
+        pm.expect(jsonData.data.items).to.be.an('array').that.is.empty;
+    });
+  language: text/javascript

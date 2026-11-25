@@ -1,0 +1,45 @@
+$kind: http-request
+name: 'TC-ITEMS-024: Delete an item_id that does not exist returns an error'
+description: |-
+  Type: Negative
+  Priority: Medium
+
+  Preconditions:
+  Item 1 does not exist
+
+  Cleanup:
+  None
+method: POST
+url: '{{BASE_URL}}'
+order: 10000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($item: ID!) { delete_item(item_id: $item) { id } }",
+      "variables": {
+        "item": "1"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should contain an errors array', function () {
+        pm.expect(jsonData.errors).to.be.an('array').that.is.not.empty;
+    });
+    pm.test('Response should not contain item data', function () {
+        pm.expect(jsonData.data && jsonData.data.delete_item).to.not.be.ok;
+    });
+  language: text/javascript

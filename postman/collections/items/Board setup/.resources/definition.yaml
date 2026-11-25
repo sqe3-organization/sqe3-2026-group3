@@ -1,0 +1,5 @@
+$kind: collection
+name: 'Board setup'
+order: 1000
+description: |-
+  Creates the board, two groups and the status and text columns.

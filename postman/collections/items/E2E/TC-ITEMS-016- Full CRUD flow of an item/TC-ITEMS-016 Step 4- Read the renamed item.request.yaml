@@ -1,0 +1,43 @@
+$kind: http-request
+name: 'TC-ITEMS-016 Step 4: Read the renamed item'
+method: POST
+url: '{{BASE_URL}}'
+order: 4000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }",
+      "variables": {
+        "ids": [
+          "{{ITEM_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    const item = jsonData.data.items[0];
+    pm.test('Item name should be the new one', function () {
+        pm.expect(item.name).to.eql('AT - E2E renamed');
+    });
+    pm.test('Column values should not change', function () {
+        pm.expect(item.column_values.find(c => c.id === 'status').text).to.eql('Working on it');
+        pm.expect(item.column_values.find(c => c.id === 'text').text).to.eql('Initial text');
+    });
+  language: text/javascript
