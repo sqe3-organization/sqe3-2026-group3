@@ -1,0 +1,44 @@
+$kind: http-request
+name: 'Read board groups'
+method: POST
+url: '{{BASE_URL}}'
+order: 7000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { boards(ids: $ids) { id top_group { id } groups { id title } } }",
+      "variables": {
+        "ids": [
+          "{{BOARD_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    const board = jsonData.data.boards[0];
+    const topGroupId = board.top_group.id;
+    const other = board.groups.find(g => g.id !== topGroupId);
+    pm.test('Board should have a top group and a second group', function () {
+        pm.expect(topGroupId).to.be.a('string').and.not.empty;
+        pm.expect(other).to.be.an('object');
+    });
+    pm.collectionVariables.set('TOP_GROUP_ID', topGroupId);
+    pm.collectionVariables.set('GROUP_ID', other.id);
+  language: text/javascript

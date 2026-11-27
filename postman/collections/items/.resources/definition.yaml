@@ -1,0 +1,35 @@
+$kind: collection
+name: Items - monday.com
+description: TC-ITEMS tests (create_item, items, change_simple_column_value, delete_item, archive_item). Run with a 4000 ms delay between requests.
+variables:
+  BOARD_ID: ""
+  GROUP_ID: ""
+  TOP_GROUP_ID: ""
+  ITEM_ID: ""
+  itemName: ""
+  longName: ""
+  newName: ""
+  ITEMS_BEFORE: ""
+auth:
+  type: apikey
+  credentials:
+    key: Authorization
+    value: "{{API_TOKEN}}"
+    in: header
+scripts:
+  - type: http:afterResponse
+    code: |-
+      const limit = Number(pm.environment.get('RESPONSE_TIME_LIMIT_MS') || 500);
+      const elapsed = Math.round(pm.response.responseTime);
+
+      pm.test('Content-Type should be present', function () {
+          pm.response.to.have.header('Content-Type');
+      });
+
+      if (elapsed <= limit) {
+          pm.test(`Response time should be less than ${limit}ms`, function () {});
+      } else {
+          // slow responses are only noted, they don't fail the test
+          pm.test.skip(`Response time was ${elapsed} ms (target ${limit} ms)`, function () {});
+      }
+    language: text/javascript

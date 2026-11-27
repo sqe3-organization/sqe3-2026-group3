@@ -1,0 +1,39 @@
+$kind: http-request
+name: 'TC-ITEMS-016 Step 6: Check item state'
+method: POST
+url: '{{BASE_URL}}'
+order: 6000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }",
+      "variables": {
+        "ids": [
+          "{{ITEM_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Item should not be active', function () {
+        const items = jsonData.data.items;
+        if (items.length) pm.expect(items[0].state).to.eql('deleted');
+    });
+  language: text/javascript

@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'TC-ITEMS-016 Step 3: Rename item'
+method: POST
+url: '{{BASE_URL}}'
+order: 3000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $value: String!) { change_simple_column_value(board_id: $board, item_id: $item, column_id: \"name\", value: $value) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "{{ITEM_ID}}",
+        "value": "AT - E2E renamed"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the new name', function () {
+        pm.expect(jsonData.data.change_simple_column_value.name).to.eql('AT - E2E renamed');
+    });
+  language: text/javascript

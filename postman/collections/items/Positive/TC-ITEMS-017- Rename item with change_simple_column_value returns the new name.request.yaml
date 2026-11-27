@@ -1,0 +1,111 @@
+$kind: http-request
+name: 'TC-ITEMS-017: Rename item with change_simple_column_value returns the new name'
+description: |-
+  Type: Positive
+  Priority: High
+
+  Preconditions:
+  Create an item by API
+
+  Cleanup:
+  Delete the item by API
+method: POST
+url: '{{BASE_URL}}'
+order: 6000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $item: ID!, $value: String!) { change_simple_column_value(board_id: $board, item_id: $item, column_id: \"name\", value: $value) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "item": "{{ITEM_ID}}",
+        "value": "AT - Renamed item"
+      }
+    }
+scripts:
+- type: beforeRequest
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // precondition: create the item by API
+    pm.collectionVariables.set('itemName', `AT - ${pm.variables.replaceIn('{{$randomProductName}}')}`);
+    try {
+        const created = await sendQuery("mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }", {
+            board: pm.collectionVariables.get('BOARD_ID'),
+            name: pm.collectionVariables.get('itemName'),
+            group: pm.collectionVariables.get('GROUP_ID')
+        });
+        pm.collectionVariables.set('ITEM_ID', created.data.create_item.id);
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the item id', function () {
+        pm.expect(jsonData.data.change_simple_column_value.id).to.eql(pm.collectionVariables.get('ITEM_ID'));
+    });
+    pm.test('Response body should contain the new name', function () {
+        pm.expect(jsonData.data.change_simple_column_value.name).to.eql('AT - Renamed item');
+    });
+
+    // data integrity: read the item again
+    try {
+        const check = await sendQuery("query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }", { ids: [pm.collectionVariables.get('ITEM_ID')] });
+        const item = check.data.items[0];
+        pm.test("[Data integrity] - Stored name should be the new one", function () {
+            pm.expect(item.name).to.eql('AT - Renamed item');
+        });
+    } catch (err) {
+        pm.test('[Data integrity] - Item should be readable', function () { throw err; });
+    }
+
+    // cleanup: delete the item by API
+    try {
+        await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: pm.collectionVariables.get('ITEM_ID') });
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript

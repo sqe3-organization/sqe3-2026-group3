@@ -1,0 +1,109 @@
+$kind: http-request
+name: 'TC-ITEMS-014: Create item without the Authorization header is rejected'
+description: |-
+  Type: Negative
+  Priority: Medium
+
+  Preconditions:
+  Count the items on the board
+
+  Cleanup:
+  Delete the item only if the API created one
+method: POST
+url: '{{BASE_URL}}'
+order: 6000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "name": "{{itemName}}"
+      }
+    }
+auth:
+  type: noauth
+scripts:
+- type: beforeRequest
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // test data: unique item name
+    pm.collectionVariables.set('itemName', `AT - ${pm.variables.replaceIn('{{$randomProductName}}')}`);
+
+    // precondition: count the items on the board
+    try {
+        const before = await sendQuery("query ($ids: [ID!]) { boards(ids: $ids) { items_count } }", { ids: [pm.collectionVariables.get('BOARD_ID')] });
+        pm.collectionVariables.set('ITEMS_BEFORE', String(before.data.boards[0].items_count));
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // status code
+    pm.test('Status code should be 401', function () {
+        pm.response.to.have.status(401);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should contain an errors array', function () {
+        pm.expect(jsonData.errors).to.be.an('array').that.is.not.empty;
+    });
+    pm.test('Response should not contain data', function () {
+        pm.expect(jsonData.data).to.be.undefined;
+    });
+
+    // data integrity: no item was created
+    try {
+        const after = await sendQuery("query ($ids: [ID!]) { boards(ids: $ids) { items_count } }", { ids: [pm.collectionVariables.get('BOARD_ID')] });
+        pm.test('[Data integrity] - Board should have the same number of items', function () {
+            pm.expect(Number(after.data.boards[0].items_count)).to.eql(Number(pm.collectionVariables.get('ITEMS_BEFORE')));
+        });
+    } catch (err) {
+        pm.test('[Data integrity] - Board should be readable', function () { throw err; });
+    }
+
+    // cleanup: delete the created item by API (only if the API created one)
+    const createdId = jsonData && jsonData.data && jsonData.data.create_item && jsonData.data.create_item.id;
+    if (createdId) {
+        try {
+            await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: createdId });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+  language: text/javascript

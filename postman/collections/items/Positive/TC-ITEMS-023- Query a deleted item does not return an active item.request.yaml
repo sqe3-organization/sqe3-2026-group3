@@ -1,0 +1,84 @@
+$kind: http-request
+name: 'TC-ITEMS-023: Query a deleted item does not return an active item'
+description: |-
+  Type: Positive
+  Priority: High
+
+  Preconditions:
+  Create an item by API, then delete it by API
+
+  Cleanup:
+  None
+method: POST
+url: '{{BASE_URL}}'
+order: 8000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "query ($ids: [ID!]) { items(ids: $ids) { id name state board { id } group { id title } column_values(ids: [\"status\", \"text\"]) { id text } } }",
+      "variables": {
+        "ids": [
+          "{{ITEM_ID}}"
+        ]
+      }
+    }
+scripts:
+- type: beforeRequest
+  code: |-
+    const sendQuery = async (query, variables) => {
+        const response = await pm.sendRequest({
+            url: pm.environment.get('BASE_URL'),
+            method: 'POST',
+            header: {
+                'Content-Type': 'application/json',
+                'API-Version': pm.environment.get('API_VERSION'),
+                'Authorization': pm.environment.get('API_TOKEN')
+            },
+            body: { mode: 'raw', raw: JSON.stringify({ query, variables }) }
+        });
+        return response.json();
+    };
+
+    // precondition: create the item by API
+    pm.collectionVariables.set('itemName', `AT - ${pm.variables.replaceIn('{{$randomProductName}}')}`);
+    try {
+        const created = await sendQuery("mutation ($board: ID!, $name: String!, $group: String, $values: JSON) { create_item(board_id: $board, item_name: $name, group_id: $group, column_values: $values) { id name } }", {
+            board: pm.collectionVariables.get('BOARD_ID'),
+            name: pm.collectionVariables.get('itemName'),
+            group: pm.collectionVariables.get('GROUP_ID')
+        });
+        pm.collectionVariables.set('ITEM_ID', created.data.create_item.id);
+    } catch (err) {
+        console.error(err);
+    }
+
+    // precondition: delete the item by API
+    try {
+        await sendQuery("mutation ($item: ID!) { delete_item(item_id: $item) { id } }", { item: pm.collectionVariables.get('ITEM_ID') });
+    } catch (err) {
+        console.error(err);
+    }
+  language: text/javascript
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Item should not be active', function () {
+        const items = jsonData.data.items;
+        if (items.length) pm.expect(items[0].state).to.eql('deleted');
+    });
+  language: text/javascript

@@ -1,0 +1,37 @@
+$kind: http-request
+name: 'Create second group'
+method: POST
+url: '{{BASE_URL}}'
+order: 3000
+headers:
+- key: Content-Type
+  value: application/json
+- key: API-Version
+  value: '{{API_VERSION}}'
+body:
+  type: json
+  content: |-
+    {
+      "query": "mutation ($board: ID!, $name: String!) { create_group(board_id: $board, group_name: $name) { id title } }",
+      "variables": {
+        "board": "{{BOARD_ID}}",
+        "name": "Second group"
+      }
+    }
+scripts:
+- type: afterResponse
+  code: |-
+    // status code
+    pm.test('Status code should be 200', function () {
+        pm.response.to.have.status(200);
+    });
+
+    // response body
+    const jsonData = pm.response.json();
+    pm.test('Response should not have errors', function () {
+        pm.expect(jsonData.errors).to.be.undefined;
+    });
+    pm.test('Response body should contain the group id', function () {
+        pm.expect(jsonData.data.create_group.id).to.be.a('string').and.not.empty;
+    });
+  language: text/javascript
