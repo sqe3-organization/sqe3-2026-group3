@@ -9,4 +9,5 @@
 
 ## Frameworks
 - `jest-tests/`: API test framework in code (Jest + axios). See [jest-tests/docs/FRAMEWORK.md](jest-tests/docs/FRAMEWORK.md).
+- `api-tests/`: first version in code (axios + Mocha + Chai) and Newman runs (Lab 3).
 - `postman/`: Postman collections and environments (Lab 2).
