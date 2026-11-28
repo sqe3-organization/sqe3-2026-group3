@@ -1,0 +1,16 @@
+id,title,date,time,valid,knownBug
+DATE-01,Leap day 2028,2028-02-29,,yes,
+DATE-02,Feb 29 in a non-leap year,2026-02-29,,no,BUG-01
+DATE-03,Feb 29 in 2100 (century not leap),2100-02-29,,no,BUG-01
+DATE-04,End of year,2026-12-31,,yes,
+DATE-05,April has only 30 days,2026-04-31,,no,BUG-01
+DATE-06,Month 13,2026-13-01,,no,BUG-01
+DATE-07,Month 00,2026-00-10,,no,BUG-01
+DATE-08,Day 00,2026-11-00,,no,BUG-01
+DATE-09,No leading zeros,2026-1-5,,no,
+DATE-10,Lower year limit realistic,1900-01-01,,yes,
+DATE-11,Upper year limit,9999-12-31,,yes,
+DATE-12,Year 0000,0000-01-01,,no,BUG-01
+DATE-13,Midnight time,2026-11-01,00:00:00,yes,
+DATE-14,Last second of day,2026-11-01,23:59:59,yes,
+DATE-15,Hour 24,2026-11-01,24:00:00,yes,

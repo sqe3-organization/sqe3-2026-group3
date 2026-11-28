@@ -1,0 +1,11 @@
+{
+  "api": {
+    "baseUrl": "https://api.monday.com/v2",
+    "headers": { "API-Version": "2025-04" },
+    "timeoutMs": 30000
+  },
+  "maxResponseTimeMs": 2500,
+  "delayBetweenTestsMs": 4000,
+  "logLevel": "debug",
+  "consoleLogLevel": "info"
+}

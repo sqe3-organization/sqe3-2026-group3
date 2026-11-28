@@ -1,0 +1,71 @@
+[
+  {
+    "id": "TXT-01",
+    "title": "Accents and diacritics",
+    "value": "Canción áéíóú ñ ü ç À"
+  },
+  {
+    "id": "TXT-02",
+    "title": "Emoji (4-byte UTF-8, ZWJ sequence)",
+    "value": "Done ✅ 🚀 👨‍👩‍👧‍👦"
+  },
+  {
+    "id": "TXT-03",
+    "title": "Cyrillic and Greek",
+    "value": "Привет мир Γειά σου"
+  },
+  {
+    "id": "TXT-04",
+    "title": "CJK and right-to-left (Arabic)",
+    "value": "你好世界 こんにちは مرحبا"
+  },
+  {
+    "id": "TXT-05",
+    "title": "Double quotes (must be escaped in JSON)",
+    "value": "He said \"hello\" to me"
+  },
+  {
+    "id": "TXT-06",
+    "title": "Single quotes and apostrophe",
+    "value": "It's 'quoted' text"
+  },
+  {
+    "id": "TXT-07",
+    "title": "Backslashes and Windows path",
+    "value": "C:\\Users\\test\\new\\table \\n literal"
+  },
+  {
+    "id": "TXT-08",
+    "title": "HTML / script tag (XSS)",
+    "value": "<b>bold</b> <script>alert('x')</script> &amp;",
+    "knownBug": "BUG-02"
+  },
+  {
+    "id": "TXT-09",
+    "title": "SQL injection string",
+    "value": "'; DROP TABLE items; --"
+  },
+  {
+    "id": "TXT-10",
+    "title": "Line break inside the text",
+    "value": "Line 1\nLine 2"
+  },
+  {
+    "id": "TXT-11",
+    "title": "Leading and trailing spaces (trimmed)",
+    "value": "   padded text   ",
+    "expected": "padded text"
+  },
+  {
+    "id": "TXT-12",
+    "title": "Very long text (2000 chars)",
+    "value": "0123456789",
+    "repeat": 200
+  },
+  {
+    "id": "TXT-13",
+    "title": "Empty string (clears the text)",
+    "value": "",
+    "expected": ""
+  }
+]

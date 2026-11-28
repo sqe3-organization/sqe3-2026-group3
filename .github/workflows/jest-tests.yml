@@ -1,0 +1,51 @@
+name: jest-tests
+
+on:
+  pull_request:
+    paths: ['jest-tests/**', '.github/workflows/jest-tests.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: jest-tests
+
+jobs:
+  quick:
+    # every pull request: conventions and tests that do not need monday.com
+    runs-on: ubuntu-latest
+    env:
+      TEST_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: jest-tests/.nvmrc
+          cache: npm
+          cache-dependency-path: jest-tests/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx jest core tests/smoke.test.js
+
+  monday:
+    # manual: all the tests against monday.com with the token of the repository secret
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      TEST_ENV: ci
+      MONDAY_TOKEN: ${{ secrets.MONDAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: jest-tests/.nvmrc
+          cache: npm
+          cache-dependency-path: jest-tests/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-and-report
+          path: |
+            jest-tests/logs/
+            jest-tests/reports/

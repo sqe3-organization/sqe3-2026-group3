@@ -1,0 +1,76 @@
+[
+  {
+    "id": "NEG-01",
+    "title": "Empty string as column_values",
+    "values": "",
+    "error": {
+      "message": "invalid value"
+    }
+  },
+  {
+    "id": "NEG-02",
+    "title": "JSON null instead of object",
+    "values": "null",
+    "error": {
+      "message": "invalid value"
+    }
+  },
+  {
+    "id": "NEG-04",
+    "title": "Column id with wrong case",
+    "values": "{\"Status\":{\"label\":\"Done\"}}",
+    "error": {
+      "code": "InvalidColumnIdException"
+    }
+  },
+  {
+    "id": "NEG-06",
+    "title": "Status label is a number",
+    "values": "{\"status\":{\"label\":123}}",
+    "error": {
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "NEG-07",
+    "title": "Status index negative",
+    "values": "{\"status\":{\"index\":-1}}",
+    "error": {
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "NEG-08",
+    "title": "Status index as non-numeric string",
+    "values": "{\"status\":{\"index\":\"abc\"}}",
+    "error": {
+      "code": "ColumnValueException"
+    },
+    "knownBug": "BUG-03"
+  },
+  {
+    "id": "NEG-09",
+    "title": "Status index decimal",
+    "values": "{\"status\":{\"index\":1.5}}",
+    "error": {
+      "code": "ColumnValueException"
+    },
+    "knownBug": "BUG-03"
+  },
+  {
+    "id": "NEG-11",
+    "title": "Date value as number",
+    "values": "{\"date4\":{\"date\":20261101}}",
+    "error": {
+      "code": "ColumnValueException"
+    }
+  },
+  {
+    "id": "NEG-12",
+    "title": "Text column receives an object",
+    "values": "{\"text\":{\"a\":1}}",
+    "error": {
+      "code": "ColumnValueException"
+    }
+  }
+]
